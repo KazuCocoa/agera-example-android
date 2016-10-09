@@ -40,14 +40,10 @@ public class Step1Activity extends AppCompatActivity {
 
         MyDataSupplier myDataSupplier = new MyDataSupplier();
 
-        Updatable updatable = new Updatable() {
-            @Override
-            public void update() {
-                Log.d("My AGERA", myDataSupplier.get());
-            }
-        };
+        Updatable updatable = () -> Log.d("My AGERA", myDataSupplier.get());
 
         myDataSupplier.addUpdatable(updatable);
+        myDataSupplier.accept("hello my agera sample !!");
     }
 
   private static class MyDataSupplier implements Observable, Supplier<String>, Receiver<String> {
