@@ -17,12 +17,14 @@
 package com.example.android.codelabs.agera.step3;
 
 import android.os.Bundle;
+import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.android.codelabs.agera.CalculatorOperations;
 import com.example.android.codelabs.agera.R;
 import com.example.android.codelabs.agera.RepositorySeekBarListener;
 import com.example.android.codelabs.agera.UiUtils;
@@ -75,38 +77,11 @@ public class CalculatorActivity extends AppCompatActivity {
                 .observe(mValue1Repo, mValue2Repo, mOperationSelector)
                 .onUpdatesPerLoop()
                 .getFrom(() -> "Lambda all the things!")
-                .thenTransform(input -> {
-                    Result<Integer> operation = mOperationSelector.get();
-                    if (operation.isPresent()) {
-                        Integer result1;
-                        int a = mValue1Repo.get();
-                        int b = mValue2Repo.get();
-                        switch (operation.get()) {
-                            case R.id.radioButtonAdd:
-                                result1 = a + b;
-                                break;
-                            case R.id.radioButtonSub:
-                                result1 = a - b;
-                                break;
-                            case R.id.radioButtonMult:
-                                result1 = a * b;
-                                break;
-                            case R.id.radioButtonDiv:
-                                try {
-                                    result1 = (a / b);
-                                } catch (ArithmeticException e) {
-                                    return Result.failure(e);
-                                }
-                                break;
-                            default:
-                                return Result.failure(
-                                        new RuntimeException("Invalid operation"));
-                        }
-                        return Result.present(result1.toString());
-                    } else {
-                        return Result.absent();
-                    }
-                })
+                .getFrom(mValue1Repo)
+                .mergeIn(mValue2Repo, Pair::create)
+                .attemptMergeIn(mOperationSelector, CalculatorOperations::attemptOperation)
+                .orEnd(Result::failure)
+                .thenTransform(input -> Result.present(input.toString()))
                 .onConcurrentUpdate(RepositoryConfig.SEND_INTERRUPT)
                 .compile();
 
