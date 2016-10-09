@@ -17,9 +17,18 @@
 package com.example.android.codelabs.agera.step1;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.example.android.codelabs.agera.R;
+import com.google.android.agera.Observable;
+import com.google.android.agera.Receiver;
+import com.google.android.agera.Supplier;
+import com.google.android.agera.Updatable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class Step1Activity extends AppCompatActivity {
@@ -29,9 +38,46 @@ public class Step1Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.step1);
 
+        MyDataSupplier myDataSupplier = new MyDataSupplier();
+
+        Updatable updatable = new Updatable() {
+            @Override
+            public void update() {
+                Log.d("My AGERA", myDataSupplier.get());
+            }
+        };
+
+        myDataSupplier.addUpdatable(updatable);
     }
 
-//  private static class MyDataSupplier implements Observable, Supplier<String>, Receiver<String> {
+  private static class MyDataSupplier implements Observable, Supplier<String>, Receiver<String> {
 
-//  }
+      List<Updatable> updatables = new ArrayList<>();
+
+      private String value;
+
+      @Override
+      public void addUpdatable(@NonNull Updatable updatable) {
+          updatables.add(updatable);
+      }
+
+      @Override
+      public void removeUpdatable(@NonNull Updatable updatable) {
+          updatables.remove(updatable);
+      }
+
+      @Override
+      public void accept(@NonNull String value) {
+          this.value = value;
+          for (Updatable updatable : updatables) {
+              updatable.update();
+          }
+      }
+
+      @NonNull
+      @Override
+      public String get() {
+          return value;
+      }
+  }
 }
