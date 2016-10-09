@@ -22,8 +22,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.example.android.codelabs.agera.R;
+import com.google.android.agera.MutableRepository;
 import com.google.android.agera.Observable;
 import com.google.android.agera.Receiver;
+import com.google.android.agera.Repositories;
+import com.google.android.agera.Repository;
 import com.google.android.agera.Supplier;
 import com.google.android.agera.Updatable;
 
@@ -33,47 +36,29 @@ import java.util.List;
 
 public class Step1Activity extends AppCompatActivity {
 
+    private MutableRepository<String> stringRespo;
+    private Updatable updatable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.step1);
 
-        MyDataSupplier myDataSupplier = new MyDataSupplier();
-
-        Updatable updatable = () -> Log.d("My AGERA", myDataSupplier.get());
-
-        myDataSupplier.addUpdatable(updatable);
-        myDataSupplier.accept("hello my agera sample !!");
+        stringRespo = Repositories.mutableRepository("my mutable repository");
+        updatable = () -> Log.d("My AGERA", stringRespo.get());
     }
 
-  private static class MyDataSupplier implements Observable, Supplier<String>, Receiver<String> {
+    @Override
+    protected void onStart() {
+        super.onStart();
 
-      List<Updatable> updatables = new ArrayList<>();
+        stringRespo.addUpdatable(updatable);
+        stringRespo.accept("hello my agera sample !!");
+    }
 
-      private String value;
-
-      @Override
-      public void addUpdatable(@NonNull Updatable updatable) {
-          updatables.add(updatable);
-      }
-
-      @Override
-      public void removeUpdatable(@NonNull Updatable updatable) {
-          updatables.remove(updatable);
-      }
-
-      @Override
-      public void accept(@NonNull String value) {
-          this.value = value;
-          for (Updatable updatable : updatables) {
-              updatable.update();
-          }
-      }
-
-      @NonNull
-      @Override
-      public String get() {
-          return value;
-      }
-  }
+    @Override
+    protected void onStop() {
+        stringRespo.removeUpdatable(updatable);
+        super.onStop();
+    }
 }
