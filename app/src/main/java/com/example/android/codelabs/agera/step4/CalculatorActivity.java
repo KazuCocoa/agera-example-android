@@ -77,12 +77,10 @@ public class CalculatorActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        mExecutor = Executors.newSingleThreadExecutor();
-
         mResultRepository = Repositories.repositoryWithInitialValue(Result.<String>absent())
                 .observe(mValue1Repo, mValue2Repo, mOperationSelector)
                 .onUpdatesPerLoop()
-                .goTo(mExecutor)
+                .goTo(CalculatorExecutor.EXECUTOR)
                 .attemptTransform(CalculatorOperations::keepCpuBusy).orEnd(Result::failure)
                 .getFrom(mValue1Repo)
                 .mergeIn(mValue2Repo, Pair::create)
@@ -125,7 +123,9 @@ public class CalculatorActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        UiUtils.startAnimation(findViewById(R.id.imageView));
+        if (mAnimationEnabled) {
+            UiUtils.startAnimation(findViewById(R.id.imageView));
+        }
     }
 
     @Override

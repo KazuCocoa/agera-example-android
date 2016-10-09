@@ -21,15 +21,16 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static com.example.android.codelabs.agera.step4.ThreadPoolIdlingResource.newThreadPoolIdlingResource;
 
 import android.content.Intent;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.IdlingResource;
 import android.support.test.espresso.UiController;
 import android.support.test.espresso.ViewAction;
 import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.filters.LargeTest;
-import android.support.test.filters.Suppress;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.view.View;
@@ -47,7 +48,6 @@ import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-@Suppress // Remove this line to enable
 public class Step4CalculatorActivityTest {
 
     private IdlingResource mIdlingResource;
@@ -58,15 +58,17 @@ public class Step4CalculatorActivityTest {
 
                 @Override
                 protected Intent getActivityIntent() {
-                    Intent intent = null;
-                    //Create an Intent to tell the activity to disable animations.
+                    Intent intent = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+                            CalculatorActivity.class);
+                    intent.putExtra(CalculatorActivity.ANIMATIONS_ENABLED_KEY, false);
                     return intent;
                 }
             };
 
     @Before
     public void registerIdlingResource() {
-        // Register the idling resource
+        mIdlingResource = newThreadPoolIdlingResource(CalculatorExecutor.EXECUTOR, "resultRepo");
+        Espresso.registerIdlingResources(mIdlingResource);
     }
 
     @After
